@@ -3,10 +3,14 @@ const overview = document.querySelector(".overview");
 const username = "crystal-dv";
 //Unordered list where repos will go
 const repoArea = document.querySelector(".repo-list");
-//Selects section where list of repos is displayed
-const repos = document.querySelector(".repos");
+//Section where list of repos is displayed
+const repoGallery = document.querySelector(".repos");
 //Section where each individual repo's data will go when selected
 const singleRepo = document.querySelector(".repo-data");
+//Back to Repo Gallery button
+const backButton = document.querySelector(".view-repos");
+//Input for search by name feature of repo gallery
+const filterInput = document.querySelector(".repos .filter-repos");
 
 
 //Function to fetch profile info from GitHub and call the displayProfile function
@@ -52,10 +56,12 @@ const getRepos = async function () {
 
 //Function to display repos
 const displayRepos = function (repoData) {
+    //Show the input box for search feature
+    filterInput.classList.remove("hide");
     //Looping through repoData to create a list of repos by name and adding a class name for repos
     for(let repo of repoData) {
-        repo.className = "repo";
         let listItem = document.createElement("li");
+        listItem.classList.add("repo");
         listItem.innerHTML = `<h3>${repo.name}</h3>`;
         repoArea.append(listItem);
     };
@@ -66,10 +72,10 @@ const displayRepos = function (repoData) {
      if (e.target.matches("h3")) {
          const repoName = e.target.innerText;
          getRepoInfo(repoName);
-     }
+     };
  });
 
- //Function to get info about an individual repo
+ //Function to fetch info about an individual repo
  const getRepoInfo = async function (repoName) {
      const repoInfoRes = await fetch (`https://api.github.com/repos/${username}/${repoName}`);
 
@@ -82,7 +88,7 @@ const displayRepos = function (repoData) {
      const languages = [];
      for (let lang in languageData) {
          languages.push(lang);
-     }
+     };
 
      displayRepoInfo(repoInfo, languages);
     };
@@ -101,7 +107,44 @@ const displayRepos = function (repoData) {
         
         singleRepo.append(displayDiv);
 
-        //Show a selected repo's data and hide the list of repo
+        //Show a selected repo's data and the back button and hide the list of repos
         singleRepo.classList.remove("hide");
-        repos.classList.add("hide");
+        repoGallery.classList.add("hide");
+        backButton.classList.remove("hide");
     };
+
+    //Event listener for the back to repo gallery button
+    const goBack = backButton.addEventListener("click", function(e) {
+        //Show repo gallery and hide individual repo info and back button
+        repoGallery.classList.remove("hide");
+        singleRepo.classList.add("hide");
+        backButton.classList.add("hide");
+    });
+    
+    //Event listener for repo search by name input
+    const inputSearch = filterInput.addEventListener("input", function(e) {
+        //Captures the value of the input box
+        const repoSearch = e.target.value;
+        //Selects each repo of the list by using the class name "repo"
+        const repos =  document.querySelectorAll(".repos .repo-list .repo");
+        //Shifts any search input to lowercase to make it more comparable
+        const lowercase = repoSearch.toLowerCase();
+        
+        //Checks if a repo includes letters from the search input and adjusts the list accordingly
+        if (repoSearch !== "") {
+            for(let item of repos) {
+                //Shifts each item of the repos selection to lowercase to make it easily comparable
+                const repoByName = item.innerText.toLowerCase();
+                if(!repoByName.includes(lowercase)) {
+                    item.classList.add("hide");
+                } else {
+                    item.classList.remove("hide");
+                };
+            };
+        //If the seach box is blank, then show all the repos again
+        } else {
+            for(let item of repos) {
+                item.classList.remove("hide");
+            };
+        };
+    });
